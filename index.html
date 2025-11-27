@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Receipt Generator</title>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .header {
+            grid-column: 1 / -1;
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+        
+        .header h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 2.2rem;
+        }
+        
+        .header p {
+            color: #7f8c8d;
+            font-size: 1.1rem;
+        }
+        
+        .form-section, .preview-section {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            padding: 25px;
+            height: fit-content;
+        }
+        
+        .section-title {
+            font-size: 1.3rem;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e1e5eb;
+            display: flex;
+            align-items: center;
+        }
+        
+        .section-title i {
+            margin-right: 10px;
+            color: #3498db;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #34495e;
+            display: flex;
+            align-items: center;
+        }
+        
+        label i {
+            margin-right: 8px;
+            color: #7f8c8d;
+            width: 20px;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #dce1e6;
+            border-radius: 6px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+        }
+        
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s;
+            gap: 8px;
+        }
+        
+        .btn:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn-reset {
+            background: #e74c3c;
+        }
+        
+        .btn-reset:hover {
+            background: #c0392b;
+        }
+        
+        .receipt {
+            background: white;
+            border: 1px solid #e1e5eb;
+            border-radius: 8px;
+            padding: 25px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+            background: linear-gradient(to bottom, #ffffff 0%, #f9fbfd 100%);
+        }
+        
+        .receipt-header {
+            text-align: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px dashed #e1e5eb;
+        }
+        
+        .receipt-title {
+            font-size: 1.8rem;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+        
+        .receipt-subtitle {
+            color: #7f8c8d;
+            font-size: 1rem;
+        }
+        
+        .receipt-details {
+            margin-bottom: 25px;
+        }
+        
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px dashed #f1f2f6;
+        }
+        
+        .detail-label {
+            font-weight: 600;
+            color: #34495e;
+        }
+        
+        .detail-value {
+            color: #2c3e50;
+        }
+        
+        .amount-row {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 2px solid #e1e5eb;
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+        
+        .receipt-footer {
+            text-align: center;
+            margin-top: 25px;
+            padding-top: 15px;
+            border-top: 1px dashed #e1e5eb;
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+        
+        .success-badge {
+            display: inline-block;
+            background: #2ecc71;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+        
+        .actions {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 25px;
+            gap: 10px;
+        }
+        
+        .btn-print {
+            background: #27ae60;
+        }
+        
+        .btn-print:hover {
+            background: #219653;
+        }
+        
+        .btn-download {
+            background: #9b59b6;
+        }
+        
+        .btn-download:hover {
+            background: #8e44ad;
+        }
+        
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            background: #2ecc71;
+            color: white;
+            border-radius: 5px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transform: translateX(150%);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        .watermark {
+            opacity: 0.1;
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            font-size: 12px;
+            color: #2c3e50;
+        }
+        
+        .receipt-container {
+            position: relative;
+        }
+    </style>
+</head>
+<body>
+    <div class="notification" id="notification">Receipt downloaded successfully!</div>
+    
+    <div class="container">
+        <div class="header">
+            <h1>Payment Receipt Generator</h1>
+            <p>Create and customize payment receipts for your transactions</p>
+        </div>
+        
+        <div class="form-section">
+            <h2 class="section-title">
+                <i>📝</i> Payment Details
+            </h2>
+            
+            <div class="form-group">
+                <label for="transactionId"><i>🔢</i> Transaction ID</label>
+                <input type="text" id="transactionId" value="TXN20230515001">
+            </div>
+            
+            <div class="form-group">
+                <label for="date"><i>📅</i> Date</label>
+                <input type="date" id="date" value="2023-05-15">
+            </div>
+            
+            <div class="form-group">
+                <label for="time"><i>⏰</i> Time</label>
+                <input type="time" id="time" value="14:30">
+            </div>
+            
+            <div class="form-group">
+                <label for="paymentMode"><i>💳</i> Payment Mode</label>
+                <select id="paymentMode">
+                    <option value="NEFT">NEFT</option>
+                    <option value="RTGS">RTGS</option>
+                    <option value="IMPS">IMPS</option>
+                    <option value="UPI">UPI</option>
+                    <option value="Bank Transfer">Bank Transfer</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="accountNumber"><i>🏦</i> Account Number</label>
+                <input type="text" id="accountNumber" value="XXXXXX7890">
+            </div>
+            
+            <div class="form-group">
+                <label for="ifscCode"><i>🔐</i> IFSC Code</label>
+                <input type="text" id="ifscCode" value="SBIN0000123">
+            </div>
+            
+            <div class="form-group">
+                <label for="amount"><i>💰</i> Amount (₹)</label>
+                <input type="number" id="amount" value="5000">
+            </div>
+            
+            <div class="form-group">
+                <label for="senderName"><i>👤</i> Sender Name</label>
+                <input type="text" id="senderName" value="John Doe">
+            </div>
+            
+            <div class="form-group">
+                <label for="receiverName"><i>👥</i> Receiver Name</label>
+                <input type="text" id="receiverName" value="Jane Smith">
+            </div>
+            
+            <div class="form-group">
+                <label for="remarks"><i>📋</i> Remarks</label>
+                <input type="text" id="remarks" value="Invoice Payment for May 2023">
+            </div>
+            
+            <div class="form-actions">
+                <button class="btn" id="updateBtn">
+                    <i>🔄</i> Update Receipt
+                </button>
+                <button class="btn btn-reset" id="resetBtn">
+                    <i>🔄</i> Reset to Default
+                </button>
+            </div>
+        </div>
+        
+        <div class="preview-section">
+            <h2 class="section-title">
+                <i>👁️</i> Receipt Preview
+            </h2>
+            
+            <div class="receipt-container">
+                <div class="receipt" id="receipt">
+                    <div class="receipt-header">
+                        <div class="success-badge">Payment Successful</div>
+                        <h2 class="receipt-title">Payment Receipt</h2>
+                        <p class="receipt-subtitle">Transaction Confirmation</p>
+                    </div>
+                    
+                    <div class="receipt-details">
+                        <div class="detail-row">
+                            <span class="detail-label">Transaction ID:</span>
+                            <span class="detail-value" id="previewTransactionId">TXN20230515001</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Date & Time:</span>
+                            <span class="detail-value" id="previewDateTime">May 15, 2023 at 02:30 PM</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Payment Mode:</span>
+                            <span class="detail-value" id="previewPaymentMode">NEFT</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Account Number:</span>
+                            <span class="detail-value" id="previewAccountNumber">XXXXXX7890</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">IFSC Code:</span>
+                            <span class="detail-value" id="previewIfscCode">SBIN0000123</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Sender:</span>
+                            <span class="detail-value" id="previewSenderName">John Doe</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Receiver:</span>
+                            <span class="detail-value" id="previewReceiverName">Jane Smith</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Remarks:</span>
+                            <span class="detail-value" id="previewRemarks">Invoice Payment for May 2025</span>
+                        </div>
+                    </div>
+                    
+                    <div class="amount-row">
+                        <span class="detail-label">Amount Paid:</span>
+                        <span class="detail-value" id="previewAmount">₹5,000.00</span>
+                    </div>
+                    
+                    <div class="receipt-footer" >
+                        <p>Thank you for your payment!</p>
+                    </div>
+                    
+                    <div class="watermark">PANDA PAY</div>
+                </div>
+            </div>
+            
+            <div class="actions">
+                <button class="btn btn-print" id="printBtn">
+                    <i>🖨️</i> Print Receipt
+                </button>
+                <button class="btn btn-download" id="downloadBtn">
+                    <i>📥</i> Download as Image
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const updateBtn = document.getElementById('updateBtn');
+            const resetBtn = document.getElementById('resetBtn');
+            const printBtn = document.getElementById('printBtn');
+            const downloadBtn = document.getElementById('downloadBtn');
+            const notification = document.getElementById('notification');
+            const receipt = document.getElementById('receipt');
+            
+            // Format date to display as "May 15, 2023"
+            function formatDate(dateString) {
+                const date = new Date(dateString);
+                const options = { month: 'long', day: 'numeric', year: 'numeric' };
+                return date.toLocaleDateString('en-US', options);
+            }
+            
+            // Format time to display as "02:30 PM"
+            function formatTime(timeString) {
+                const [hours, minutes] = timeString.split(':');
+                const hour = parseInt(hours);
+                const ampm = hour >= 12 ? 'PM' : 'AM';
+                const formattedHour = hour % 12 || 12;
+                return `${formattedHour}:${minutes} ${ampm}`;
+            }
+            
+            // Format amount to display as "₹5,000.00"
+            function formatAmount(amount) {
+                return '₹' + parseFloat(amount).toLocaleString('en-IN', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
+            }
+            
+            // Show notification
+            function showNotification(message) {
+                notification.textContent = message;
+                notification.classList.add('show');
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                }, 3000);
+            }
+            
+            // Update receipt preview
+            function updateReceipt() {
+                // Get values from form
+                const transactionId = document.getElementById('transactionId').value;
+                const date = document.getElementById('date').value;
+                const time = document.getElementById('time').value;
+                const paymentMode = document.getElementById('paymentMode').value;
+                const accountNumber = document.getElementById('accountNumber').value;
+                const ifscCode = document.getElementById('ifscCode').value;
+                const amount = document.getElementById('amount').value;
+                const senderName = document.getElementById('senderName').value;
+                const receiverName = document.getElementById('receiverName').value;
+                const remarks = document.getElementById('remarks').value;
+                
+                // Update preview
+                document.getElementById('previewTransactionId').textContent = transactionId;
+                document.getElementById('previewDateTime').textContent = `${formatDate(date)} at ${formatTime(time)}`;
+                document.getElementById('previewPaymentMode').textContent = paymentMode;
+                document.getElementById('previewAccountNumber').textContent = accountNumber;
+                document.getElementById('previewIfscCode').textContent = ifscCode;
+                document.getElementById('previewAmount').textContent = formatAmount(amount);
+                document.getElementById('previewSenderName').textContent = senderName;
+                document.getElementById('previewReceiverName').textContent = receiverName;
+                document.getElementById('previewRemarks').textContent = remarks;
+                
+                showNotification('Receipt updated successfully!');
+            }
+            
+            // Reset form to default values
+            function resetForm() {
+                document.getElementById('transactionId').value = '5208382104';
+                document.getElementById('date').value = '2023-05-15';
+                document.getElementById('time').value = '14:30';
+                document.getElementById('paymentMode').value = 'NEFT';
+                document.getElementById('accountNumber').value = 'XXXXXX7890';
+                document.getElementById('ifscCode').value = 'SBIN0000123';
+                document.getElementById('amount').value = '5000';
+                document.getElementById('senderName').value = 'RK Enterprises ';
+                document.getElementById('receiverName').value = 'Jane Smith';
+                document.getElementById('remarks').value = 'Invoice Payment for May 2025';
+                
+                updateReceipt();
+                showNotification('Form reset to default values!');
+            }
+            
+            // Print receipt
+            function printReceipt() {
+                const receiptContent = document.querySelector('.receipt').innerHTML;
+                const originalContent = document.body.innerHTML;
+                
+                document.body.innerHTML = `
+                    <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+                        ${receiptContent}
+                    </div>
+                `;
+                
+                window.print();
+                document.body.innerHTML = originalContent;
+                updateReceipt(); // Restore the event listeners
+                showNotification('Receipt sent to printer!');
+            }
+            
+            // Download as Image
+            function downloadReceiptAsImage() {
+                html2canvas(receipt, {
+                    scale: 2, // Higher quality
+                    useCORS: true,
+                    logging: false,
+                    backgroundColor: '#ffffff'
+                }).then(canvas => {
+                    const link = document.createElement('a');
+                    link.download = `payment-receipt-${document.getElementById('transactionId').value}.png`;
+                    link.href = canvas.toDataURL('image/png');
+                    link.click();
+                    showNotification('Receipt downloaded as image!');
+                });
+            }
+            
+            // Event listeners
+            updateBtn.addEventListener('click', updateReceipt);
+            resetBtn.addEventListener('click', resetForm);
+            printBtn.addEventListener('click', printReceipt);
+            downloadBtn.addEventListener('click', downloadReceiptAsImage);
+            
+            // Initialize with default values
+            updateReceipt();
+        });
+    </script>
+</body>
+</html>
